@@ -1,100 +1,246 @@
-<!-- 1. The <iframe> (video player) will replace this <div> tag. -->
-<div class="iframe-container" style = "display:block;">
-  <div id="player"></div>
+ <head>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+</head> 
+<div class="sidebar">
+  <div class="container">
+    <div class="ypt_wrapper">
+      <div class="video embed-container">
+        <div id="ytpl-player1" data-pl="PLSVAZsq7pCw8GcUgZin3wq2eImWWZFdME">
+        </div>
+      </div>
+      <div>
+        <h2 class="ytpl-title"></h2>
+        <div class="ytpl-desc"></div>
+      </div>
+      <div class="ytpl-flexslider">
+        <ul class="ytpl--thumbs slides"></ul>
+      </div>
+    </div>
+  </div>
 </div>
-<div class="loading style-2">
-	<div class="loading-wheel"></div>
-</div>
+
 <style>
-	.loading {
-    width: 100%;
-    height: 100%;
-    position: fixed;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    background-color: rgba(0,0,0,1);
+	body {
+  margin: 0 auto;
 }
-.loading-wheel {
-    width: 20px;
-    height: 20px;
-    margin-top: -40px;
-    margin-left: -40px;
-    
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    
-    border-width: 30px;
-    border-radius: 50%;
-    -webkit-animation: spin 1s linear infinite;
+
+
+.sidebar {
+  width: 100vw;
+  padding: 20px;
+  box-sizing: border-box;
+  background-color: #dddddd;
+  display: inline-block;
 }
-.style-2 .loading-wheel {
-    border-style: double;
-    border-color: #ccc transparent;
+
+.embed-container {
+	position: relative;
+	padding-bottom: 56.25%;
+	height: 0;
+	overflow: hidden;
+	max-width: 100%;
 }
-@-webkit-keyframes spin {
-    0% {
-        -webkit-transform: rotate(0);
-    }
-    100% {
-        -webkit-transform: rotate(-360deg);
-    }
+
+.embed-container iframe {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+}
+
+.ytpl--thumbs {
+  max-width: 100%;
+  box-sizing: border-box;
+  display: inline;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.ytpl--thumbs li {
+  list-style: none;
+  position: relative;
+  float: left;
+  width: 50%;
+  line-height: 0;
+}
+
+.ytpl--thumbs li:nth-child(1) {
+  padding-right: 5px;
+  padding-bottom: 5px;
+  padding-top: 10px;
+  box-sizing: border-box;
+}
+
+.ytpl--thumbs li:nth-child(2) {
+  padding-left: 5px;
+  padding-bottom: 5px;
+  padding-top: 10px;
+  box-sizing: border-box;
+}
+
+.ytpl--thumbs li:nth-child(3) {
+  padding-right: 5px;
+  padding-top: 5px;
+  box-sizing: border-box;
+}
+
+.ytpl--thumbs li:nth-child(4) {
+  padding-left: 5px;
+  padding-top: 5px;
+  box-sizing: border-box;
+}
+
+.ytpl--thumbs img,
+.embed-container {
+  max-width: 100%;
+  box-sizing: border-box;
+  background-color: rgba(0,0,0,.25);
+}
+
+.ytpl--thumbs p {
+  display: none;
+  position: absolute;
+  margin: 0;
+}
+
+.ytpl--thumbs button {
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  line-height: 0;
+  opacity: .8;
+  transition: all 0.5s ease;
+}
+
+.ytpl--thumbs button:hover {
+  cursor: pointer;
+  opacity: 1;
+}
+
+.ytpl--thumbs button:hover p,
+.ytpl--thumbs button p {
+  display: none;
+}
+
+.ytpl-playing p {
+  display: block;
+}
+
+#ytpl-title,
+#ytpl-desc {
+  display: none;
 }
 </style>
-<script>
-// 2. This code loads the IFrame Player API code asynchronously.
-  var tag = document.createElement('script');
 
-  tag.src = "https://www.youtube.com/iframe_api";
-  var firstScriptTag = document.getElementsByTagName('script')[0];
-  firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+<script>var tag = document.createElement('script');
+tag.src = "https://www.youtube.com/player_api";
+var firstScriptTag = document.getElementsByTagName('script')[0];
+firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
-  // 3. This function creates an <iframe> (and YouTube player)
-  //    after the API code downloads.
-  var player;
-  function onYouTubeIframeAPIReady() {
-    player = new YT.Player('player', {
-      width: '100%',
+var players = new Array();
+var players_list = ["ytpl-player1"];
 
-      playerVars: { 'autoplay': 1, 'playsinline': 1, 'rel': 0, 'loop': 1, 'autopause': 0, 'modestbranding': 0, 'enablejsapi': 1 ,      'listType':'playlist',
-      'list': 'PLSVAZsq7pCw8GcUgZin3wq2eImWWZFdME',},
-      events: {
-        'onReady': onPlayerReady,
-	'onStateChange':onPlayerStateChange
-      }
+var nowPlaying = "ytpl-playing";
+var nowPlayingClass = "." + nowPlaying;
+
+function getPlaylistData(playerName) {
+    var apiKey = 'AIzaSyDI4rWo_wVAxRZEIgF6_8sRZDj8OCOZZ38';
+    var url = 'https://www.googleapis.com/youtube/v3/playlistItems?part=snippet';
+    var data = {
+        'playlistId': $('#' + playerName).data('pl'),
+        'key': apiKey,
+        'maxResults': 4
+    };
+    
+    $.get(url, data, function(e) {
+        buildHTML(playerName, e.items)
+    })
+}
+
+function buildHTML(playerName, data) {
+    var list_data = '';
+    data.forEach(function(e, i) {
+        var item = e.snippet;
+        if (item.thumbnails) {
+            list_data += '<li><button data-ytpl-index="' + i + '" data-ytpl-title="' + item.title + '" data-ytpl-desc="' + item.description + '"><p>' + item.title + '</p><img alt="' + item.title + '" src="' + item.thumbnails.medium.url + '"/></button></li>';
+        }
     });
-  }
+    $('#' + playerName).closest('.ypt_wrapper').find('.ytpl--thumbs').html(list_data);
+}
 
-  // 4. The API will call this function when the video player is ready.
-  function onPlayerReady(event) {
-   document.getElementsByClassName('loading').style = "display:none;";
-   document.getElementsByClassName('iframe-container').style = "display:block;";
-   event.target.mute();
-   event.target.playVideo();
-  }
-  function onPlayerStateChange(event) {
-    if (event.data == YT.PlayerState.ENDED) {
-      player.seekTo(0);
-      player.playVideo();
+// generate playlist items once main player has loaded
+function onPlayerReady(event) {
+    getPlaylistData(event.target.name);
+}
+
+function onYouTubeIframeAPIReady() {
+    for (item in players_list) {
+        players[players_list[item]] = new YT.Player(players_list[item], {
+            height: '360',
+            width: '640',
+            playerVars: {
+                listType: 'playlist',
+                list: $('#' + players_list[item]).data('pl'),
+                autoplay: 1,
+                playsinline: 1, 
+                rel: 0, 
+                loop: 1, 
+                autopause: 0, 
+                modestbranding: 0, 
+                enablejsapi: 1 
+            },
+            events: {
+                'onReady': onPlayerReady,
+                'onStateChange': onPlayerStateChange
+            }
+        });
+        players[players_list[item]].name = players_list[item];
     }
-  }
-</script>
+}
 
-<style>
-/* Make the youtube video responsive */
-  .iframe-container{
-    position: relative;
-    width: 100%;
-    padding-bottom: 56.25%;
-    height: 0;
-  }
-  .iframe-container iframe{
-    position: absolute;
-    top:0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-  }
-</style>
+function updateTitles($this) {
+    $('#ytpl-title').text($this.data('ytpl-title'))
+    $('#ytpl-desc').text($this.data('ytpl-desc'))
+}
+
+function onPlayerStateChange(event) {
+    var $buttons = $('#' + event.target.name).closest('.ypt_wrapper').find('.ytpl--thumbs').find('button');
+    
+    var currentIndex = event.target.getPlaylistIndex();
+
+    // remove existing active class, add to currently playing
+    if (event.data === YT.PlayerState.PLAYING) {
+        $buttons.removeClass(nowPlaying);
+        $buttons.eq(currentIndex).addClass(nowPlaying);
+    }
+
+    // if last video has finished playing
+    if (event.data === YT.PlayerState.ENDED && currentIndex === $buttons.length - 1) {
+        $buttons.removeClass(nowPlaying);
+    }
+    updateTitles($buttons.eq(currentIndex))
+}
+
+// handle playlist button click
+$(document).on('click', '[data-ytpl-index]:not(".ytpl-playing")', function(e) {
+    e.preventDefault();
+    var $this = $(this);
+    var index = $this.data('ytpl-index');
+    var playerName = $(this).closest('.ypt_wrapper').find('iframe').attr('id');
+    updateTitles($this);
+		
+    if (navigator.userAgent.match(/(iPad|iPhone|iPod)/g)) {
+        players[playerName].cuePlaylist({
+            listType: 'playlist',
+            list: $('#' + players_list[playerName]).data('pl'),
+            index: index,
+            suggestedQuality: 'hd720'
+        });
+    } else {
+        players[playerName].playVideoAt(index); //Play the new video, does not work for IOS 7
+    }
+});
+</script>
